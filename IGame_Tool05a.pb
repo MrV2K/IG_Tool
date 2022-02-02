@@ -54,6 +54,8 @@
 ; Changed column order in main list.
 ; Added Title Case to the help window.
 ; Changed 'Output Case' to 'Title Case' and renamed 'Ignore' to 'Camel Case' in the combobox.
+; Sped up edit window drawing
+; Added basic data to unknown slaves
 ;
 ; ====================================================================
 
@@ -677,6 +679,8 @@ Procedure Fix_List()
     EndIf
     If Not FindMapElement(Comp_Map(),LCase(UM_Database()\UM_Folder+Chr(95)+UM_Database()\UM_Slave))
       UM_Database()\UM_Unknown=#True
+      UM_Database()\UM_Short=UM_Database()\UM_Name
+      UM_Database()\UM_Genre="Unknown"
     EndIf
   Next
   
@@ -816,7 +820,7 @@ Procedure Edit_Window()
   
   Backup_Database(#False)
   
-  If OpenWindow(#EDIT_WINDOW,0,0,300,125,"Edit",#PB_Window_SystemMenu|#PB_Window_WindowCentered,WindowID(#MAIN_WINDOW))
+  If OpenWindow(#EDIT_WINDOW,0,0,300,125,"Edit",#PB_Window_SystemMenu|#PB_Window_Invisible|#PB_Window_WindowCentered,WindowID(#MAIN_WINDOW))
     
     TextGadget(#PB_Any,5,8,50,24,"Name",#PB_Text_Center)
     StringGadget(#EDIT_NAME,55,5,240,24,UM_Database()\UM_Name)
@@ -831,9 +835,13 @@ Procedure Edit_Window()
     TextGadget(#PB_Any,5,98,50,24,"Genre",#PB_Text_Center)
     ComboBoxGadget(#EDIT_GENRE,55,95,240,24)
     
+    Pause_Gadget(#EDIT_GENRE)  
+    
     ForEach Genres()
       AddGadgetItem(#EDIT_GENRE,-1,Genres())
     Next
+    
+    Resume_Gadget(#EDIT_GENRE)
     
     ForEach Genres()  
       If LCase(Genres())=LCase(UM_Database()\UM_Genre) 
@@ -841,6 +849,8 @@ Procedure Edit_Window()
         Break
       EndIf
     Next
+    
+    HideWindow(#EDIT_WINDOW,#False)
     
   EndIf
   
@@ -1066,16 +1076,16 @@ Until close=#True
 
 End
 ; IDE Options = PureBasic 6.00 Beta 3 (Windows - x64)
-; CursorPosition = 55
-; FirstLine = 14
-; Folding = AAAQ-
+; CursorPosition = 56
+; FirstLine = 23
+; Folding = AAAA+
 ; Optimizer
 ; EnableThread
 ; EnableXP
 ; DPIAware
 ; UseIcon = boing.ico
-; Executable = IGame_Tool_64.exe
-; Compiler = PureBasic 6.00 Beta 3 - C Backend (Windows - x64)
+; Executable = IGame_Tool_32.exe
+; Compiler = PureBasic 6.00 Beta 3 - C Backend (Windows - x86)
 ; Debugger = Standalone
 ; IncludeVersionInfo
 ; VersionField0 = 0,0,0,5
@@ -1088,6 +1098,11 @@ End
 ; VersionField7 = IG_Tool
 ; VersionField8 = IGame_Tool.exe
 ; VersionField9 = 2021 Paul Vince
+; VersionField10 = -
+; VersionField11 = -
+; VersionField12 = -
+; VersionField13 = -
+; VersionField14 = -
 ; VersionField15 = VOS_NT
 ; VersionField16 = VFT_APP
 ; VersionField17 = 0809 English (United Kingdom)
