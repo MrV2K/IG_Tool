@@ -4,7 +4,7 @@
 ;
 ; Version 0.5a
 ;
-; © 2021 Paul Vince (MrV2k)
+; © 2022 Paul Vince (MrV2k)
 ;
 ; https://easymame.mameworld.info
 ;
@@ -61,9 +61,9 @@
 ;
 ; Version 0.6a
 ;
-; Improved CSV loading speeds. Almost instant!
-; Improved fix list speed. Again, almost instant!
-; Added database error check to fix list procedure
+; Improved CSV loading speeds again. Almost instant!
+; Improved fix list speed as well. Again, almost instant!
+; Added file loading  error checks to fix list procedure
 ;
 ; ====================================================================
 ;
@@ -144,7 +144,7 @@ Global FTP_User.s="ftp"
 Global FTP_Pass.s="amiga"
 Global FTP_Passive=#True
 Global FTP_Port=21
-Global IG_Data_File.s=""
+Global UM_Data_File.s=""
 Global Keep_Data.b=#True
 Global Short_Names.b=#False
 Global Filter.b=#False
@@ -238,70 +238,6 @@ Procedure.l FTPClose(hInternet.l)
   ProcedureReturn InternetCloseHandle_(hInternet) 
 EndProcedure 
 
-Procedure Load_GL()
-  
-  Protected o_path$, path.s
-  
-  path=OpenFileRequester("Open "+o_path$+" List","","*.*",0)
-  
-  ClearList(UM_Database())
-  
-  If path<>""
-    
-    SetWindowTitle(#MAIN_WINDOW, "Loading Gameslist...")
-        
-    Protected igfile, count
-    Protected instring.s, ipath.s, ifile.s
-    
-    If ReadFile(igfile,path)
-      
-      While Not Eof(igfile)
-        
-        count=2
-        instring=ReadString(igfile)
-        If instring="" : Continue : EndIf
-        If FindString(instring,"title=")
-          AddElement(UM_Database())
-          UM_Database()\UM_Genre="Unknown"
-          UM_Database()\UM_Name=Trim(Right(instring,Len(instring)-FindString(instring,"=")))
-        EndIf
-        
-        If FindString(instring,"genre=")
-          UM_Database()\UM_Genre=Right(instring,Len(instring)-FindString(instring,"="))
-        EndIf
-        
-        If FindString(instring,"path=")
-          UM_Database()\UM_Path=GetPathPart(Right(instring,Len(instring)-FindString(instring,"=")))
-          count=CountString(UM_Database()\UM_Path,"/")
-          UM_Database()\UM_Folder=StringField(UM_Database()\UM_Path,count,"/")+"/"
-          UM_Database()\UM_Slave=GetFilePart(Right(instring,Len(instring)-FindString(instring,"=")))
-        EndIf     
-        
-        If FindString(instring,"favorite=")
-          UM_Database()\UM_Data_1=Right(instring,Len(instring)-FindString(instring,"="))
-        EndIf
-        If FindString(instring,"timesplayed=")
-          UM_Database()\UM_Data_2=Right(instring,Len(instring)-FindString(instring,"="))
-        EndIf
-        If FindString(instring,"lastplayed=")
-          UM_Database()\UM_Data_3=Right(instring,Len(instring)-FindString(instring,"="))
-        EndIf
-        If FindString(instring,"hidden=")
-          UM_Database()\UM_Data_4=Right(instring,Len(instring)-FindString(instring,"="))
-        EndIf
-    
-  Wend
-  
-  CloseFile(igfile) 
-  
-Else
-  MessageRequester("Error","Error Reading File",#PB_MessageRequester_Error|#PB_MessageRequester_Ok)
-EndIf
-
-EndIf
-
-EndProcedure
-
 Procedure Save_CSV()
   
   Protected igfile, output$, path.s, response
@@ -343,7 +279,7 @@ Procedure Save_CSV()
           output$+UM_Database()\UM_Data_3+Chr(59)
           output$+UM_Database()\UM_Data_4
         EndIf
- 
+        
         WriteString(igfile,output$+Chr(10))
       Next
       FlushFileBuffers(igfile)
@@ -354,8 +290,8 @@ Procedure Save_CSV()
 EndProcedure
 
 Procedure Load_CSV()
-
-  Protected CSV_File.i, Text_Data.s, Text_String.s
+  
+  Protected CSV_File.i, DB_List.s, Text_String.s
   Protected Count.i, I.i, Backslashes.i, Text_Line.s
   
   Protected NewList CSV_List.s()
@@ -457,17 +393,17 @@ Procedure Load_CSV()
   EndIf  
   
   SortStructuredList(UM_Database(),#PB_Sort_Ascending|#PB_Sort_NoCase,OffsetOf(UM_Data\UM_Name),TypeOf(UM_Data\UM_Name))
-
+  
   Backup_Database(#True)
+
+  Proc_Exit:
   
   FreeList(CSV_List())
-  
-  Proc_Exit:
   
 EndProcedure
 
 Procedure Filter_List()
-   
+  
   Protected Previous.s
   
   ClearList(Filtered_List())
@@ -481,7 +417,7 @@ Procedure Filter_List()
         UM_Database()\UM_Filtered=#True
         NextElement(UM_Database())
       EndIf     
-       previous=UM_Database()\UM_Name
+      previous=UM_Database()\UM_Name
     EndIf
     If Unknown
       If UM_Database()\UM_Unknown=#True
@@ -495,7 +431,7 @@ Procedure Filter_List()
   Else
     DB_Filter(#False)
   EndIf
-    
+  
 EndProcedure
 
 Procedure Get_Database()
@@ -546,7 +482,7 @@ Procedure Get_Database()
         FTPDownload(hConnect,New_DB,New_DB)
         FTPDownload(hConnect,"genres","genres")
         
-        IG_Data_File=New_DB
+        UM_Data_File=New_DB
         
       Else
         
@@ -554,7 +490,7 @@ Procedure Get_Database()
         
         Delay(500)
         
-        IG_Data_File=Old_DB
+        UM_Data_File=Old_DB
         
       EndIf
       
@@ -564,7 +500,7 @@ Procedure Get_Database()
       
       MessageRequester("Error", "Cannot connect to FTP.",#PB_MessageRequester_Error|#PB_MessageRequester_Ok)
       
-      IG_Data_File=Old_DB
+      UM_Data_File=Old_DB
       
     EndIf
     
@@ -572,13 +508,13 @@ Procedure Get_Database()
     
     MessageRequester("Error", "Cannot connect to Network.",#PB_MessageRequester_Error|#PB_MessageRequester_Ok)
     
-    IG_Data_File=Old_DB
+    UM_Data_File=Old_DB
     
   EndIf
   
-  If Old_DB<>"" : IG_Data_File=Old_DB : EndIf
+  If Old_DB<>"" : UM_Data_File=Old_DB : EndIf
   
-  If IG_Data_File="" : MessageRequester("Error","No database file found",#PB_MessageRequester_Error|#PB_MessageRequester_Ok) : EndIf
+  If UM_Data_File="" : MessageRequester("Error","No database file found",#PB_MessageRequester_Error|#PB_MessageRequester_Ok) : EndIf
   
   FreeList(FTP_List())
   
@@ -586,12 +522,12 @@ EndProcedure
 
 Procedure Load_DB()
   
-  Protected CSV_File.i, Path.s, Text_Data.s, Text_String.s
+  Protected CSV_File.i, Path.s
   Protected Count.i, I.i, Backslashes.i, Text_Line.s
   
-  Protected NewList Text_Data.s()
+  Protected NewList DB_List.s()
   
-  path=Home_Path+IG_Data_File
+  path=Home_Path+UM_Data_File
   
   If path<>""
     
@@ -600,14 +536,14 @@ Procedure Load_DB()
     
     If ReadFile(CSV_File,Path,#PB_Ascii)
       Repeat
-        AddElement(Text_Data())
-        Text_Data()=ReadString(CSV_File)
+        AddElement(DB_List())
+        DB_List()=ReadString(CSV_File)
       Until Eof(CSV_File)
       CloseFile(CSV_File) 
       
-      ForEach Text_Data()
+      ForEach DB_List()
         AddElement(Comp_Database())
-        Text_Line=Text_Data()
+        Text_Line=DB_List()
         Comp_Database()\C_Slave=LCase(StringField(Text_Line,1,Chr(59)))
         Comp_Database()\C_Folder=StringField(Text_Line,2,Chr(59))
         Comp_Database()\C_Genre=StringField(Text_Line,3,Chr(59))
@@ -624,7 +560,7 @@ Procedure Load_DB()
   
   SortStructuredList(UM_Database(),#PB_Sort_Ascending|#PB_Sort_NoCase,OffsetOf(UM_Data\UM_Name),TypeOf(UM_Data\UM_Name))
   
-  FreeList(Text_Data())
+  FreeList(DB_List())
   
 EndProcedure
 
@@ -637,7 +573,7 @@ Procedure Draw_List()
   Pause_Gadget(#MAIN_LIST)
   
   ClearGadgetItems(#MAIN_LIST)
-    
+  
   Filter_List()
   
   If ListSize(Filtered_List())>0
@@ -677,7 +613,7 @@ Procedure Draw_List()
   Else
     DisableGadget(#TAG_BUTTON,#True)
   EndIf
-    
+  
   Resume_Gadget(#MAIN_LIST)
   
 EndProcedure
@@ -722,7 +658,7 @@ Procedure Fix_List()
     MessageRequester("Error", "Database failed to load.",#PB_MessageRequester_Error|#PB_MessageRequester_Ok)
     
   EndIf
-
+  
   CloseWindow(#LOADING_WINDOW)
   
 EndProcedure
@@ -756,12 +692,11 @@ Procedure Tag_List()
       SelectElement(Lines(),ListIndex(Tags()))
       SetGadgetItemText(#MAIN_LIST,Lines(),UM_Database()\UM_Name,0)
     Next
-    ;Draw_List()
   EndIf
   
   FreeList(Tags())
   FreeList(Lines())
-    
+  
 EndProcedure
 
 Procedure Help_Window()
@@ -816,7 +751,7 @@ Procedure Help_Window()
   output$+""+Chr(10)
   output$+"'Show Unknown' filters the list and shows unknown entries. If an entry is marked as unknown, it may be worth checking to see it the slave has been updated."+Chr(10)
   output$+""+Chr(10)
-  output$+"'Title Case' sets the case of the title names in the outputted CSV file. The availble options are 'Camel Case', 'lower case' and 'UPPER CASE'. Select from this menu to save the title names as desired."+Chr(10)
+  output$+"'Title Case' sets the case of the title names in the outputted CSV file. The available options are 'Camel Case', 'lower case' and 'UPPER CASE'. Select from this menu to save the title names as desired."+Chr(10)
   output$+""+Chr(10)
   
   If OpenWindow(#HELP_WINDOW,0,0,400,450,"Help",#PB_Window_SystemMenu|#PB_Window_WindowCentered,WindowID(#MAIN_WINDOW))
@@ -892,7 +827,7 @@ Procedure Edit_Window()
 EndProcedure
 
 Procedure Main_Window()
-
+  
   If OpenWindow(#MAIN_WINDOW,0,0,900,600,"IGame Tool "+Version,#PB_Window_SystemMenu|#PB_Window_ScreenCentered)
     
     Pause_Window(#MAIN_WINDOW)
@@ -902,7 +837,7 @@ Procedure Main_Window()
     AddGadgetColumn(#MAIN_LIST,1,"Genre",220)
     AddGadgetColumn(#MAIN_LIST,2,"Slave",200)
     AddGadgetColumn(#MAIN_LIST,3,"Path",220)
-
+    
     ButtonGadget(#LOAD_BUTTON,5,555,80,40,"Load CSV")
     ButtonGadget(#FIX_BUTTON,90,555,80,40,"Fix List")
     ButtonGadget(#SAVE_BUTTON,175,555,80,40,"Save CSV")
@@ -929,7 +864,7 @@ Procedure Main_Window()
     
     DisableGadget(#FIX_BUTTON,#True)
     DisableGadget(#SAVE_BUTTON,#True)
-
+    
     DisableGadget(#SHORT_NAME_CHECK,#True)
     DisableGadget(#KEEP_DATA_CHECK,#True)
     DisableGadget(#CLEAR_BUTTON,#True)
@@ -977,8 +912,8 @@ Repeat
           close=#True
         EndIf  
       EndIf
-            
-      Case #PB_Event_Gadget
+      
+    Case #PB_Event_Gadget
       
       Select gadget
           
@@ -1010,37 +945,34 @@ Repeat
           
         Case #TAG_BUTTON
           Tag_List()
-                    
+          
         Case #CLEAR_BUTTON
           If MessageRequester("Warning","Clear All Data?",#PB_MessageRequester_YesNo|#PB_MessageRequester_Warning)=#PB_MessageRequester_Yes
-          FreeList(Undo_Database())
-          FreeList(UM_Database())
-          FreeList(Filtered_List())
-          Pause_Window(#MAIN_WINDOW)
-          ClearGadgetItems(#MAIN_LIST)
-          DisableGadget(#FIX_BUTTON,#True)
-          DisableGadget(#SAVE_BUTTON,#True)
-          DisableGadget(#DUPE_CHECK,#True)
-          DisableGadget(#SHORT_NAME_CHECK,#True)
-          DisableGadget(#KEEP_DATA_CHECK,#True)
-          DisableGadget(#CLEAR_BUTTON,#True)
-          DisableGadget(#TAG_BUTTON,#True)
-          DisableGadget(#UNKNOWN_CHECK,#True)
-          DisableGadget(#UNDO_BUTTON,#True)
-          DisableGadget(#CASE_COMBO,#True)
-          Unknown=#False
-          Filter=#False
-          Short_Names=#False
-          Output_Case=0
-          SetGadgetState(#CASE_COMBO,Output_Case)
-          SetGadgetState(#DUPE_CHECK,Filter)
-          SetGadgetState(#UNKNOWN_CHECK,Unknown)
-          SetGadgetState(#SHORT_NAME_CHECK,Short_Names)
-          SetWindowTitle(#MAIN_WINDOW,"IGame Tool "+Version)
-          Global NewList UM_Database.UM_Data()
-          Global NewList Undo_Database.UM_Data()
-          Global NewList Filtered_List.i()
-          Resume_Window(#MAIN_WINDOW)
+            ClearList(Undo_Database())
+            ClearList(UM_Database())
+            ClearList(Filtered_List())
+            Pause_Window(#MAIN_WINDOW)
+            ClearGadgetItems(#MAIN_LIST)
+            DisableGadget(#FIX_BUTTON,#True)
+            DisableGadget(#SAVE_BUTTON,#True)
+            DisableGadget(#DUPE_CHECK,#True)
+            DisableGadget(#SHORT_NAME_CHECK,#True)
+            DisableGadget(#KEEP_DATA_CHECK,#True)
+            DisableGadget(#CLEAR_BUTTON,#True)
+            DisableGadget(#TAG_BUTTON,#True)
+            DisableGadget(#UNKNOWN_CHECK,#True)
+            DisableGadget(#UNDO_BUTTON,#True)
+            DisableGadget(#CASE_COMBO,#True)
+            Unknown=#False
+            Filter=#False
+            Short_Names=#False
+            Output_Case=0
+            SetGadgetState(#CASE_COMBO,Output_Case)
+            SetGadgetState(#DUPE_CHECK,Filter)
+            SetGadgetState(#UNKNOWN_CHECK,Unknown)
+            SetGadgetState(#SHORT_NAME_CHECK,Short_Names)
+            SetWindowTitle(#MAIN_WINDOW,"IGame Tool "+Version)
+            Resume_Window(#MAIN_WINDOW)
           EndIf
           
         Case #HELP_BUTTON
@@ -1061,7 +993,7 @@ Repeat
             UM_Database()\UM_Short=GetGadgetText(#EDIT_SHORT)
           EndIf
           
-       Case #EDIT_SLAVE
+        Case #EDIT_SLAVE
           If EventType()=#PB_EventType_Change
             UM_Database()\UM_Slave=GetGadgetText(#EDIT_SLAVE)
           EndIf   
@@ -1099,7 +1031,7 @@ Repeat
           EndIf
           
       EndSelect
-             
+      
       
   EndSelect
   
@@ -1107,9 +1039,7 @@ Until close=#True
 
 End
 ; IDE Options = PureBasic 6.00 Beta 3 (Windows - x64)
-; CursorPosition = 137
-; FirstLine = 135
-; Folding = EARC+
+; Folding = AAAA-
 ; Optimizer
 ; EnableThread
 ; EnableXP
