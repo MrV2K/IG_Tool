@@ -363,7 +363,7 @@ Procedure Load_CSV()
   CSV_Path=OpenFileRequester("Open CSV","","CSV File (*.csv)|*.csv",0)
   
   If CSV_Path<>""
-
+    
     If ReadFile(CSV_File,CSV_Path,#PB_UTF8)
       
       Message_Window("Loading Game List...")
@@ -398,50 +398,62 @@ Procedure Load_CSV()
       
       CloseFile(CSV_File)   
       
-      If ListSize(CSV_List())=0 : Goto Proc_Exit : EndIf
+      If ListSize(CSV_List())=0 
+        
+        Goto Proc_Exit
+        
+      Else
+        
+        ClearList(UM_Database())
+        
+        ForEach CSV_List()
+          AddElement(UM_Database())
+          Text_Line=CSV_List()
+          UM_Database()\UM_Name=StringField(Text_Line,2,Chr(59))
+          UM_Database()\UM_Genre=StringField(Text_Line,3,Chr(59))
+          UM_Database()\UM_Path=GetPathPart(StringField(Text_Line,4,Chr(59)))
+          If CountString(UM_Database()\UM_Path,Chr(47))>1
+            Backslashes=CountString(UM_Database()\UM_Path,Chr(47))
+            UM_Database()\UM_Folder=StringField(UM_Database()\UM_Path,Backslashes,Chr(47))
+          Else
+            Backslashes=CountString(UM_Database()\UM_Path,Chr(58))
+            UM_Database()\UM_Folder=StringField(UM_Database()\UM_Path,Backslashes+1,Chr(58))
+            UM_Database()\UM_Folder=RemoveString(UM_Database()\UM_Folder,Chr(47))
+          EndIf
+          UM_Database()\UM_Slave=GetFilePart(StringField(Text_Line,4,Chr(59)))
+          UM_Database()\UM_Data_1=StringField(Text_Line,5,Chr(59))
+          UM_Database()\UM_Data_2=StringField(Text_Line,6,Chr(59))
+          UM_Database()\UM_Data_3=StringField(Text_Line,7,Chr(59))
+          UM_Database()\UM_Data_4=StringField(Text_Line,8,Chr(59))
+          UM_Database()\UM_Filtered=#False
+        Next
+        
+        CloseWindow(#LOADING_WINDOW)
+        
+        Pause_Window(#MAIN_WINDOW)
+        
+        DisableGadget(#FIX_BUTTON,#False)
+        DisableGadget(#SAVE_BUTTON,#False)
+        DisableGadget(#KEEP_DATA_CHECK,#False)
+        DisableGadget(#CLEAR_BUTTON,#False)
+        DisableGadget(#TAG_BUTTON,#False)
+        DisableGadget(#DUPE_CHECK,#False)
+        DisableGadget(#CASE_COMBO,#False)
+        
+        Resume_Window(#MAIN_WINDOW)
+        
+      EndIf
       
-      ClearList(UM_Database())
+    Else
       
-      ForEach CSV_List()
-        AddElement(UM_Database())
-        Text_Line=CSV_List()
-        UM_Database()\UM_Name=StringField(Text_Line,2,Chr(59))
-        UM_Database()\UM_Genre=StringField(Text_Line,3,Chr(59))
-        UM_Database()\UM_Path=GetPathPart(StringField(Text_Line,4,Chr(59)))
-        If CountString(UM_Database()\UM_Path,Chr(47))>1
-          Backslashes=CountString(UM_Database()\UM_Path,Chr(47))
-          UM_Database()\UM_Folder=StringField(UM_Database()\UM_Path,Backslashes,Chr(47))
-        Else
-          Backslashes=CountString(UM_Database()\UM_Path,Chr(58))
-          UM_Database()\UM_Folder=StringField(UM_Database()\UM_Path,Backslashes+1,Chr(58))
-          UM_Database()\UM_Folder=RemoveString(UM_Database()\UM_Folder,Chr(47))
-        EndIf
-        UM_Database()\UM_Slave=GetFilePart(StringField(Text_Line,4,Chr(59)))
-        UM_Database()\UM_Data_1=StringField(Text_Line,5,Chr(59))
-        UM_Database()\UM_Data_2=StringField(Text_Line,6,Chr(59))
-        UM_Database()\UM_Data_3=StringField(Text_Line,7,Chr(59))
-        UM_Database()\UM_Data_4=StringField(Text_Line,8,Chr(59))
-        UM_Database()\UM_Filtered=#False
-      Next
-           
-      CloseWindow(#LOADING_WINDOW)
-      
-      Pause_Window(#MAIN_WINDOW)
-      
-      DisableGadget(#FIX_BUTTON,#False)
-      DisableGadget(#SAVE_BUTTON,#False)
-      DisableGadget(#KEEP_DATA_CHECK,#False)
-      DisableGadget(#CLEAR_BUTTON,#False)
-      DisableGadget(#TAG_BUTTON,#False)
-      DisableGadget(#DUPE_CHECK,#False)
-      DisableGadget(#CASE_COMBO,#False)
-      
-      Resume_Window(#MAIN_WINDOW)
+      MessageRequester("Error", "Cannot CSV file!", #PB_MessageRequester_Error|#PB_MessageRequester_Ok)
       
     EndIf
     
   Else
+    
     MessageRequester("Error", "No File Selected!", #PB_MessageRequester_Error|#PB_MessageRequester_Ok)
+    
   EndIf  
   
   SortStructuredList(UM_Database(),#PB_Sort_Ascending|#PB_Sort_NoCase,OffsetOf(UM_Data\UM_Name),TypeOf(UM_Data\UM_Name))
@@ -456,20 +468,20 @@ EndProcedure
 
 Procedure Filter_List()
    
-  Protected Previous.s
+  Protected Previous.s, Previous2.s, Previous3.s
   
   ClearList(Filtered_List())
   
   ForEach UM_Database()  
     UM_Database()\UM_Filtered=#False
     If Filter
-      If UM_Database()\UM_Name=Previous   
+      If UM_Database()\UM_Name=Previous
         UM_Database()\UM_Filtered=#True
         PreviousElement(UM_Database())
         UM_Database()\UM_Filtered=#True
         NextElement(UM_Database())
       EndIf     
-      previous=UM_Database()\UM_Name
+       previous=UM_Database()\UM_Name
     EndIf
     If Unknown
       If UM_Database()\UM_Unknown=#True
@@ -591,21 +603,22 @@ Procedure Load_DB()
         AddElement(Text_Data())
         Text_Data()=ReadString(CSV_File)
       Until Eof(CSV_File)
-      CloseFile(CSV_File)  
+      CloseFile(CSV_File) 
+      
+      ForEach Text_Data()
+        AddElement(Comp_Database())
+        Text_Line=Text_Data()
+        Comp_Database()\C_Slave=LCase(StringField(Text_Line,1,Chr(59)))
+        Comp_Database()\C_Folder=StringField(Text_Line,2,Chr(59))
+        Comp_Database()\C_Genre=StringField(Text_Line,3,Chr(59))
+        Comp_Database()\C_Name=StringField(Text_Line,4,Chr(59))
+        Comp_Database()\C_Short=StringField(Text_Line,5,Chr(59))
+        Comp_Map(LCase(Comp_Database()\C_Folder+Chr(95)+Comp_Database()\C_Slave))=ListIndex(Comp_Database())
+      Next
+      
+    Else
+      MessageRequester("Error","Cannot open database.",#PB_MessageRequester_Error|#PB_MessageRequester_Ok)
     EndIf
-    
-    Count=CountString(Text_Data,Chr(10))
-    
-    ForEach Text_Data()
-      AddElement(Comp_Database())
-      Text_Line=Text_Data()
-      Comp_Database()\C_Slave=LCase(StringField(Text_Line,1,Chr(59)))
-      Comp_Database()\C_Folder=StringField(Text_Line,2,Chr(59))
-      Comp_Database()\C_Genre=StringField(Text_Line,3,Chr(59))
-      Comp_Database()\C_Name=StringField(Text_Line,4,Chr(59))
-      Comp_Database()\C_Short=StringField(Text_Line,5,Chr(59))
-      Comp_Map(LCase(Comp_Database()\C_Folder+Chr(95)+Comp_Database()\C_Slave))=ListIndex(Comp_Database())
-    Next
     
   EndIf  
   
@@ -639,13 +652,13 @@ Procedure Draw_List()
       EndSelect
       AddGadgetItem(#MAIN_LIST,-1,text)
       If ListIndex(UM_Database())>1
-        If previous_entry=UM_Database()\UM_Name
+        If previous_entry=UM_Database()\UM_Slave
           SetGadgetItemColor(#MAIN_LIST, ListIndex(Filtered_List()), #PB_Gadget_FrontColor,#Red)
           SetGadgetItemColor(#MAIN_LIST, ListIndex(Filtered_List())-1, #PB_Gadget_FrontColor,#Red)
         EndIf
       EndIf 
       If UM_Database()\UM_Unknown=#True : SetGadgetItemColor(#MAIN_LIST, ListIndex(Filtered_List()), #PB_Gadget_FrontColor,#Blue) : EndIf
-      previous_entry=UM_Database()\UM_Name
+      previous_entry=UM_Database()\UM_Slave
     Next
     
     For Count=0 To CountGadgetItems(#MAIN_LIST) Step 2
@@ -676,7 +689,6 @@ Procedure Fix_List()
   Message_Window("Checking database...")  
   
   If ListSize(Comp_Database())=0  
-
     Get_Database()
     SetGadgetText(#LOADING_TEXT,"Loading database...")
     Load_DB()
@@ -1095,9 +1107,9 @@ Until close=#True
 
 End
 ; IDE Options = PureBasic 6.00 Beta 3 (Windows - x64)
-; CursorPosition = 65
-; FirstLine = 23
-; Folding = EAAA+
+; CursorPosition = 448
+; FirstLine = 257
+; Folding = EAJB+
 ; Optimizer
 ; EnableThread
 ; EnableXP
