@@ -135,7 +135,7 @@ Global NewMap Comp_Map.i()
 
 ;- ### Global Variables ###
 
-Global Version.s="0.5a"
+Global Version.s="0.6a"
 Global FTP_Folder.s="~Uploads"
 Global FTP_SubFolder.s="mrv2k"
 Global FTP_SubFolder2.s="IG_Tool"
@@ -468,7 +468,7 @@ EndProcedure
 
 Procedure Filter_List()
    
-  Protected Previous.s, Previous2.s, Previous3.s
+  Protected Previous.s
   
   ClearList(Filtered_List())
   
@@ -652,13 +652,13 @@ Procedure Draw_List()
       EndSelect
       AddGadgetItem(#MAIN_LIST,-1,text)
       If ListIndex(UM_Database())>1
-        If previous_entry=UM_Database()\UM_Slave
+        If previous_entry=UM_Database()\UM_Name
           SetGadgetItemColor(#MAIN_LIST, ListIndex(Filtered_List()), #PB_Gadget_FrontColor,#Red)
           SetGadgetItemColor(#MAIN_LIST, ListIndex(Filtered_List())-1, #PB_Gadget_FrontColor,#Red)
         EndIf
       EndIf 
       If UM_Database()\UM_Unknown=#True : SetGadgetItemColor(#MAIN_LIST, ListIndex(Filtered_List()), #PB_Gadget_FrontColor,#Blue) : EndIf
-      previous_entry=UM_Database()\UM_Slave
+      previous_entry=UM_Database()\UM_Name
     Next
     
     For Count=0 To CountGadgetItems(#MAIN_LIST) Step 2
@@ -1107,9 +1107,9 @@ Until close=#True
 
 End
 ; IDE Options = PureBasic 6.00 Beta 3 (Windows - x64)
-; CursorPosition = 448
-; FirstLine = 257
-; Folding = EAJB+
+; CursorPosition = 137
+; FirstLine = 135
+; Folding = EARC+
 ; Optimizer
 ; EnableThread
 ; EnableXP
@@ -1119,12 +1119,12 @@ End
 ; Compiler = PureBasic 6.00 Beta 3 - C Backend (Windows - x86)
 ; Debugger = Standalone
 ; IncludeVersionInfo
-; VersionField0 = 0,0,0,5
-; VersionField1 = 0,0,0,5
+; VersionField0 = 0,0,0,6
+; VersionField1 = 0,0,0,6
 ; VersionField2 = MrV2K
 ; VersionField3 = IGame Tool
-; VersionField4 = 0.5a
-; VersionField5 = 0.5a
+; VersionField4 = 0.6a
+; VersionField5 = 0.6a
 ; VersionField6 = IGame Conversion Tool
 ; VersionField7 = IG_Tool
 ; VersionField8 = IGame_Tool.exe
