@@ -64,6 +64,7 @@
 ; Improved CSV loading speeds again. Almost instant!
 ; Improved fix list speed as well. Again, almost instant!
 ; Added file loading  error checks to fix list procedure
+; Fixed bug in database download procedure.
 ;
 ; ====================================================================
 ;
@@ -411,7 +412,7 @@ Procedure Filter_List()
   ForEach UM_Database()  
     UM_Database()\UM_Filtered=#False
     If Filter
-      If UM_Database()\UM_Name=Previous
+      If UM_Database()\UM_Name=Previous   
         UM_Database()\UM_Filtered=#True
         PreviousElement(UM_Database())
         UM_Database()\UM_Filtered=#True
@@ -512,7 +513,7 @@ Procedure Get_Database()
     
   EndIf
   
-  If Old_DB<>"" : UM_Data_File=Old_DB : EndIf
+  If New_DB="" : UM_Data_File=Old_DB : EndIf
   
   If UM_Data_File="" : MessageRequester("Error","No database file found",#PB_MessageRequester_Error|#PB_MessageRequester_Ok) : EndIf
   
@@ -1038,8 +1039,10 @@ Repeat
 Until close=#True
 
 End
-; IDE Options = PureBasic 6.00 Beta 3 (Windows - x64)
-; Folding = AAAA-
+; IDE Options = PureBasic 6.00 Beta 4 (Windows - x64)
+; CursorPosition = 579
+; FirstLine = 227
+; Folding = AAIB-
 ; Optimizer
 ; EnableThread
 ; EnableXP
