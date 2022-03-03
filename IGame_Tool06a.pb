@@ -2,7 +2,7 @@
 ;
 ; I-Game Tool
 ;
-; Version 0.5a
+; Version 0.6a
 ;
 ; © 2022 Paul Vince (MrV2k)
 ;
@@ -65,6 +65,7 @@
 ; Improved fix list speed as well. Again, almost instant!
 ; Added file loading  error checks to fix list procedure
 ; Fixed bug in database download procedure.
+; Main list columns now scale to scrollbar.
 ;
 ; ====================================================================
 ;
@@ -396,7 +397,7 @@ Procedure Load_CSV()
   SortStructuredList(UM_Database(),#PB_Sort_Ascending|#PB_Sort_NoCase,OffsetOf(UM_Data\UM_Name),TypeOf(UM_Data\UM_Name))
   
   Backup_Database(#True)
-
+  
   Proc_Exit:
   
   FreeList(CSV_List())
@@ -616,6 +617,12 @@ Procedure Draw_List()
   EndIf
   
   Resume_Gadget(#MAIN_LIST)
+  
+  If GetWindowLongPtr_(GadgetID(#MAIN_LIST), #GWL_STYLE) & #WS_VSCROLL
+    SetGadgetItemAttribute(#MAIN_LIST,3,#PB_ListIcon_ColumnWidth,240)
+  Else
+    SetGadgetItemAttribute(#MAIN_LIST,3,#PB_ListIcon_ColumnWidth,255)
+  EndIf
   
 EndProcedure
 
@@ -877,6 +884,12 @@ Procedure Main_Window()
     
     Resume_Window(#MAIN_WINDOW)
     
+    If GetWindowLongPtr_(GadgetID(#MAIN_LIST), #GWL_STYLE) & #WS_VSCROLL
+      SetGadgetItemAttribute(#MAIN_LIST,3,#PB_ListIcon_ColumnWidth,240)
+    Else
+      SetGadgetItemAttribute(#MAIN_LIST,3,#PB_ListIcon_ColumnWidth,255)
+    EndIf
+    
   EndIf
   
 EndProcedure
@@ -1040,16 +1053,14 @@ Until close=#True
 
 End
 ; IDE Options = PureBasic 6.00 Beta 4 (Windows - x64)
-; CursorPosition = 579
-; FirstLine = 227
-; Folding = AAIB-
+; Folding = AAAA-
 ; Optimizer
 ; EnableThread
 ; EnableXP
 ; DPIAware
 ; UseIcon = boing.ico
 ; Executable = IGame_Tool_x86.exe
-; Compiler = PureBasic 6.00 Beta 3 - C Backend (Windows - x86)
+; Compiler = PureBasic 6.00 Beta 4 - C Backend (Windows - x64)
 ; Debugger = Standalone
 ; IncludeVersionInfo
 ; VersionField0 = 0,0,0,6
